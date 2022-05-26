@@ -58,6 +58,51 @@ namespace PactNet.Verifier
         }
 
         /// <summary>
+        /// Publish results to the pact broker without any additional settings
+        /// </summary>
+        /// <param name="providerVersion">Provider version</param>
+        /// <returns>Fluent builder</returns>
+        public IPactUriOptions PublishResults(string providerVersion)
+            => this.PublishResults(providerVersion, _ => { });
+
+        /// <summary>
+        /// Publish results to the pact broker
+        /// </summary>
+        /// <param name="providerVersion">Provider version</param>
+        /// <param name="configure">Configure the publish options</param>
+        /// <returns>Fluent builder</returns>
+        public IPactUriOptions PublishResults(string providerVersion, Action<IPactBrokerPublishOptions> configure)
+        {
+            Guard.NotNullOrEmpty(providerVersion, nameof(providerVersion));
+            Guard.NotNull(configure, nameof(configure));
+
+            var options = new PactBrokerPublishOptions(this.provider, providerVersion);
+            configure.Invoke(options);
+            options.Apply();
+
+            return this;
+        }
+
+        /// <summary>
+        /// Publish results to the pact broker without any additional settings, if the condition is met
+        /// </summary>
+        /// <param name="condition">Only publish if this condition is true</param>
+        /// <param name="providerVersion">Provider version</param>
+        /// <returns>Fluent builder</returns>
+        public IPactUriOptions PublishResults(bool condition, string providerVersion)
+            => this.PublishResults(condition, providerVersion, _ => { });
+
+        /// <summary>
+        /// Publish results to the pact broker if the condition is met
+        /// </summary>
+        /// <param name="condition">Only publish if this condition is true</param>
+        /// <param name="providerVersion">Provider version</param>
+        /// <param name="configure">Configure the publish options</param>
+        /// <returns>Fluent builder</returns>
+        public IPactUriOptions PublishResults(bool condition, string providerVersion, Action<IPactBrokerPublishOptions> configure)
+            => condition ? this.PublishResults(providerVersion, configure) : this;
+
+        /// <summary>
         /// Apply the configured options
         /// </summary>
         public void Apply() => this.provider.AddUrlSource(this.uri, this.username, this.password, this.token);
